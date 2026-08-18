@@ -16,7 +16,13 @@ type Callbacks = {
   onPeerClosed: (peerId: string) => void;
 };
 
-const ICE_SERVERS: RTCIceServer[] = [{ urls: "stun:stun.l.google.com:19302" }];
+let iceServers: RTCIceServer[] = [{ urls: "stun:stun.l.google.com:19302" }];
+
+/** Substitui os ICE servers (STUN/TURN) usados nas proximas conexoes. Peers ja
+ *  conectados nao sao afetados; chame antes de createPeer. */
+export function setIceServers(servers: RTCIceServer[]): void {
+  if (servers.length > 0) iceServers = servers;
+}
 
 const peers = new Map<string, PeerEntry>();
 let callbacks: Callbacks | null = null;
@@ -42,7 +48,7 @@ export function setLocalMicStream(stream: MediaStream | null): void {
 export function createPeer(peerId: string, isInitiator: boolean): void {
   if (peers.has(peerId)) return;
   const cb = requireCallbacks();
-  const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+  const pc = new RTCPeerConnection({ iceServers });
   const entry: PeerEntry = {
     pc,
     polite: !isInitiator,

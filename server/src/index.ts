@@ -1,7 +1,14 @@
 import { createServer } from "node:http";
 import { Server } from "socket.io";
 import { registerHandlers } from "./handlers.js";
+import { getIceServers } from "./turnCredentials.js";
 import type { ClientToServerEvents, ServerToClientEvents } from "./types.js";
+
+try {
+  process.loadEnvFile();
+} catch {
+  // sem .env, segue com as variaveis de ambiente ja existentes no processo
+}
 
 const PORT = Number(process.env.PORT ?? 3001);
 
@@ -9,6 +16,13 @@ const httpServer = createServer((req, res) => {
   if (req.url === "/") {
     res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" });
     res.end("LANcord signaling server no ar.");
+    return;
+  }
+  if (req.url === "/ice-servers") {
+    getIceServers().then((iceServers) => {
+      res.writeHead(200, { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" });
+      res.end(JSON.stringify({ iceServers }));
+    });
   }
 });
 const io = new Server<ClientToServerEvents, ServerToClientEvents>(httpServer, {

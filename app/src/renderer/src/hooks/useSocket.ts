@@ -10,6 +10,7 @@ import {
   handleSignal,
   initPeerConnectionManager,
   removePeer,
+  setIceServers,
   setLocalMicStream,
 } from "@renderer/webrtc/peerConnectionManager";
 
@@ -35,6 +36,23 @@ function resolveServerUrl(rawAddress: string): string {
   return `http://${address}:3001`;
 }
 
+/** Busca STUN/TURN do servidor (credenciais TURN de curta duracao via
+ *  Cloudflare, quando configuradas). Falha silenciosamente pro STUN padrao
+ *  se o servidor nao responder a tempo. */
+async function loadIceServers(serverUrl: string): Promise<void> {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 4000);
+    const res = await fetch(`${serverUrl}/ice-servers`, { signal: controller.signal });
+    clearTimeout(timeout);
+    if (!res.ok) return;
+    const { iceServers } = (await res.json()) as { iceServers: RTCIceServer[] };
+    setIceServers(iceServers);
+  } catch (err) {
+    console.error("[useSocket] falha ao buscar ice-servers, usando STUN padrao", err);
+  }
+}
+
 export async function connect(address: string, username: string): Promise<void> {
   const { setStatus, setSelf, setError } = useConnectionStore.getState();
   setStatus("connecting");
@@ -53,7 +71,10 @@ export async function connect(address: string, username: string): Promise<void> 
   setLocalMicStream(micStream);
   useMediaStore.getState().setLocalStream(micStream);
 
-  socket = io(resolveServerUrl(address), { transports: ["websocket"], reconnectionAttempts: Infinity });
+  const serverUrl = resolveServerUrl(address);
+  await loadIceServers(serverUrl);
+
+  socket = io(serverUrl, { transports: ["websocket"], reconnectionAttempts: Infinity });
 
   socket.on("connect_error", (err) => {
     setError(`Não foi possível conectar ao servidor: ${err.message}`);
