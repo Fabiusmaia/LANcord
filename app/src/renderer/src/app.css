@@ -294,6 +294,58 @@ input {
   font-weight: 600;
 }
 
+.chat-file-input {
+  display: none;
+}
+
+.chat-attach-button {
+  background: #383a40;
+  border: none;
+  color: #dbdee1;
+  width: 40px;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.chat-attach-button:hover {
+  background: #4a4d55;
+}
+
+.chat-image-wrap {
+  margin-top: 4px;
+}
+
+.chat-image {
+  max-width: 320px;
+  max-height: 240px;
+  border-radius: 8px;
+  display: block;
+}
+
+.chat-pending-image {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  border-top: 1px solid #2b2d31;
+}
+
+.chat-pending-image img {
+  max-height: 64px;
+  border-radius: 6px;
+}
+
+.chat-pending-image button {
+  background: #383a40;
+  border: none;
+  color: #dbdee1;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
 .control-bar {
   display: flex;
   gap: 8px;

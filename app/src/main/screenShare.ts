@@ -30,7 +30,9 @@ export function registerScreenShareHandlers(): void {
       const source = sources.find((s) => s.id === selectedSourceId);
       selectedSourceId = null;
       if (source) {
-        callback({ video: source, audio: "loopback" });
+        // Audio vai por fora, via appAudioCapture (loopback por processo quando
+        // possivel), nao pelo loopback de sistema inteiro do getDisplayMedia.
+        callback({ video: source });
       } else {
         callback({});
       }

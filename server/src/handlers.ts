@@ -5,6 +5,9 @@ import type { ClientToServerEvents, ServerToClientEvents } from "./types.js";
 type AppServer = Server<ClientToServerEvents, ServerToClientEvents>;
 type AppSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
 
+// ~5MB de imagem binaria, considerando o overhead de ~33% do base64.
+const MAX_IMAGE_DATA_URL_LENGTH = 7_000_000;
+
 export function registerHandlers(io: AppServer, socket: AppSocket): void {
   socket.on("join", ({ username }) => {
     const trimmed = username.trim().slice(0, 32) || "Anônimo";
@@ -23,13 +26,17 @@ export function registerHandlers(io: AppServer, socket: AppSocket): void {
     io.emit("member:status", { id: socket.id, muted: status.muted, sharing: status.sharing });
   });
 
-  socket.on("chat:send", ({ text }) => {
+  socket.on("chat:send", ({ text, image }) => {
     const member = getMember(socket.id);
-    if (!member || !text.trim()) return;
+    if (!member) return;
+    const trimmedText = text.trim().slice(0, 2000);
+    const validImage = typeof image === "string" && image.length <= MAX_IMAGE_DATA_URL_LENGTH ? image : undefined;
+    if (!trimmedText && !validImage) return;
     io.emit("chat:message", {
       id: socket.id,
       username: member.username,
-      text: text.slice(0, 2000),
+      text: trimmedText,
+      image: validImage,
       ts: Date.now(),
     });
   });

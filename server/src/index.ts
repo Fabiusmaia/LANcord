@@ -13,6 +13,7 @@ const httpServer = createServer((req, res) => {
 });
 const io = new Server<ClientToServerEvents, ServerToClientEvents>(httpServer, {
   cors: { origin: "*" },
+  maxHttpBufferSize: 8_000_000,
 });
 
 io.on("connection", (socket) => {

@@ -112,8 +112,8 @@ export function disconnect(): void {
   useMediaStore.getState().reset();
 }
 
-export function sendChat(text: string): void {
-  socket?.emit("chat:send", { text });
+export function sendChat(text: string, image?: string): void {
+  socket?.emit("chat:send", { text, image });
 }
 
 export function updateStatus(status: { muted?: boolean; sharing?: boolean }): void {

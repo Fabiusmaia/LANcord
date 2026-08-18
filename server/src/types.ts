@@ -10,6 +10,7 @@ export type ChatMessage = {
   id: string;
   username: string;
   text: string;
+  image?: string;
   ts: number;
 };
 
@@ -42,7 +43,7 @@ export interface ClientToServerEvents {
   join: (payload: { username: string }) => void;
   signal: (payload: SignalPayload) => void;
   "status:update": (payload: StatusUpdatePayload) => void;
-  "chat:send": (payload: { text: string }) => void;
+  "chat:send": (payload: { text: string; image?: string }) => void;
 }
 
 export interface ServerToClientEvents {

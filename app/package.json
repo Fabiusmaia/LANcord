@@ -1,7 +1,7 @@
 {
   "name": "app",
   "private": true,
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Clone minimalista do Discord para LAN (voz + compartilhamento de tela)",
   "author": "DiscordLAN",
   "main": "./out/main/index.js",
@@ -31,6 +31,7 @@
   },
   "dependencies": {
     "electron-store": "^8.2.0",
+    "loopback-capture": "^2.0.0",
     "socket.io-client": "^4.8.1",
     "zustand": "^5.0.2"
   },

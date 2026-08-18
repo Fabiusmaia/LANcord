@@ -3,6 +3,7 @@ import { join } from "path";
 import { electronApp, is } from "@electron-toolkit/utils";
 import { registerStoreHandlers } from "./store";
 import { registerScreenShareHandlers } from "./screenShare";
+import { registerAppAudioHandlers } from "./appAudioCapture";
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -39,6 +40,7 @@ app.whenReady().then(() => {
 
   registerStoreHandlers();
   registerScreenShareHandlers();
+  registerAppAudioHandlers();
 
   createWindow();
 
