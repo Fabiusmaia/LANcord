@@ -7,8 +7,7 @@ export default function ConnectScreen(): JSX.Element {
   const status = useConnectionStore((s) => s.status);
   const error = useConnectionStore((s) => s.error);
   const [username, setUsername] = useState("");
-  const [host, setHost] = useState("");
-  const [port, setPort] = useState("3001");
+  const [address, setAddress] = useState("");
   const [recent, setRecent] = useState<RecentConnection[]>([]);
 
   useEffect(() => {
@@ -17,45 +16,41 @@ export default function ConnectScreen(): JSX.Element {
 
   async function handleSubmit(e: React.FormEvent): Promise<void> {
     e.preventDefault();
-    const portNumber = Number(port);
-    if (!username.trim() || !host.trim() || !portNumber) return;
+    if (!username.trim() || !address.trim()) return;
 
     await window.electronAPI.addRecentConnection({
-      host: host.trim(),
-      port: portNumber,
+      address: address.trim(),
       username: username.trim(),
       lastUsedAt: Date.now(),
     });
-    void connect(host.trim(), portNumber, username.trim());
+    void connect(address.trim(), username.trim());
   }
 
   function fillFromRecent(c: RecentConnection): void {
     setUsername(c.username);
-    setHost(c.host);
-    setPort(String(c.port));
+    setAddress(c.address);
   }
 
   return (
     <div className="connect-screen">
       <form className="connect-card" onSubmit={handleSubmit}>
         <h1>DiscordLAN</h1>
-        <p className="subtitle">Conecte-se ao servidor de um amigo na sua LAN Radmin.</p>
+        <p className="subtitle">Conecte-se ao servidor de um amigo (IP na LAN/Radmin ou link de tunnel).</p>
 
         <label>
           Seu nome
           <input value={username} onChange={(e) => setUsername(e.target.value)} maxLength={32} required />
         </label>
 
-        <div className="host-port-row">
-          <label>
-            IP do servidor
-            <input value={host} onChange={(e) => setHost(e.target.value)} placeholder="26.x.x.x" required />
-          </label>
-          <label className="port-label">
-            Porta
-            <input value={port} onChange={(e) => setPort(e.target.value)} inputMode="numeric" required />
-          </label>
-        </div>
+        <label>
+          Endereço do servidor
+          <input
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            placeholder="26.x.x.x:3001 ou https://algo.trycloudflare.com"
+            required
+          />
+        </label>
 
         {error && <p className="error-text">{error}</p>}
 
@@ -67,13 +62,8 @@ export default function ConnectScreen(): JSX.Element {
           <div className="recent-list">
             <span className="recent-title">Recentes</span>
             {recent.map((c) => (
-              <button
-                type="button"
-                key={`${c.host}:${c.port}`}
-                className="recent-item"
-                onClick={() => fillFromRecent(c)}
-              >
-                {c.username} @ {c.host}:{c.port}
+              <button type="button" key={c.address} className="recent-item" onClick={() => fillFromRecent(c)}>
+                {c.username} @ {c.address}
               </button>
             ))}
           </div>

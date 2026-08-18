@@ -9,10 +9,17 @@ function VideoTile({ label, stream, muted }: { label: string; stream: MediaStrea
     if (ref.current) ref.current.srcObject = stream;
   }, [stream]);
 
+  function handleFullscreen(): void {
+    ref.current?.requestFullscreen();
+  }
+
   return (
     <div className="video-tile">
-      <video ref={ref} autoPlay playsInline muted={muted} />
+      <video ref={ref} autoPlay playsInline muted={muted} onDoubleClick={handleFullscreen} />
       <span className="video-tile-label">{label}</span>
+      <button type="button" className="video-tile-fullscreen" onClick={handleFullscreen} title="Tela cheia">
+        ⛶
+      </button>
     </div>
   );
 }

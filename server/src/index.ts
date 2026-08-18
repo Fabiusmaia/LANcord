@@ -5,7 +5,12 @@ import type { ClientToServerEvents, ServerToClientEvents } from "./types.js";
 
 const PORT = Number(process.env.PORT ?? 3001);
 
-const httpServer = createServer();
+const httpServer = createServer((req, res) => {
+  if (req.url === "/") {
+    res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" });
+    res.end("LANcord signaling server no ar.");
+  }
+});
 const io = new Server<ClientToServerEvents, ServerToClientEvents>(httpServer, {
   cors: { origin: "*" },
 });

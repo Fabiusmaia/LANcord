@@ -18,7 +18,7 @@ export function toggleDeafen(): void {
 
 export async function startScreenShare(sourceId: string): Promise<void> {
   await window.electronAPI.setSelectedSource(sourceId);
-  const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+  const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
 
   const [track] = stream.getVideoTracks();
   track.onended = () => stopScreenShare();

@@ -30,7 +30,7 @@ export function registerScreenShareHandlers(): void {
       const source = sources.find((s) => s.id === selectedSourceId);
       selectedSourceId = null;
       if (source) {
-        callback({ video: source });
+        callback({ video: source, audio: "loopback" });
       } else {
         callback({});
       }

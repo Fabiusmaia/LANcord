@@ -26,7 +26,16 @@ initPeerConnectionManager({
   onPeerClosed: (peerId) => useMediaStore.getState().removeRemotePeerStreams(peerId),
 });
 
-export async function connect(host: string, port: number, username: string): Promise<void> {
+/** Aceita "26.x.x.x:3001" (LAN/Radmin) ou uma URL completa como
+ *  "https://algo.trycloudflare.com" (tunnel). Sem porta explicita, assume 3001. */
+function resolveServerUrl(rawAddress: string): string {
+  const address = rawAddress.trim().replace(/\/+$/, "");
+  if (/^[a-z]+:\/\//i.test(address)) return address;
+  if (address.includes(":")) return `http://${address}`;
+  return `http://${address}:3001`;
+}
+
+export async function connect(address: string, username: string): Promise<void> {
   const { setStatus, setSelf, setError } = useConnectionStore.getState();
   setStatus("connecting");
   setError(null);
@@ -44,7 +53,7 @@ export async function connect(host: string, port: number, username: string): Pro
   setLocalMicStream(micStream);
   useMediaStore.getState().setLocalStream(micStream);
 
-  socket = io(`http://${host}:${port}`, { transports: ["websocket"], reconnectionAttempts: Infinity });
+  socket = io(resolveServerUrl(address), { transports: ["websocket"], reconnectionAttempts: Infinity });
 
   socket.on("connect_error", (err) => {
     setError(`Não foi possível conectar ao servidor: ${err.message}`);
@@ -56,7 +65,7 @@ export async function connect(host: string, port: number, username: string): Pro
   });
 
   socket.on("welcome", ({ self, members }) => {
-    setSelf(self.id, self.username, host, port);
+    setSelf(self.id, self.username, address);
     setStatus("connected");
     useMembersStore.getState().setRoster(members);
     members.forEach((m) => createPeer(m.id, true));

@@ -1,6 +1,5 @@
 export type RecentConnection = {
-  host: string;
-  port: number;
+  address: string;
   username: string;
   lastUsedAt: number;
 };

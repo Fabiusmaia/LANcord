@@ -7,6 +7,7 @@ type PeerEntry = {
   ignoreOffer: boolean;
   micSender: RTCRtpSender | null;
   screenSender: RTCRtpSender | null;
+  screenAudioSender: RTCRtpSender | null;
 };
 
 type Callbacks = {
@@ -49,6 +50,7 @@ export function createPeer(peerId: string, isInitiator: boolean): void {
     ignoreOffer: false,
     micSender: null,
     screenSender: null,
+    screenAudioSender: null,
   };
   peers.set(peerId, entry);
 
@@ -72,7 +74,12 @@ export function createPeer(peerId: string, isInitiator: boolean): void {
 
   pc.ontrack = (event) => {
     const [stream] = event.streams;
-    if (stream) cb.onRemoteTrack(peerId, event.track.kind as "audio" | "video", stream);
+    if (!stream) return;
+    // Uma stream com faixa de video só pode ser o compartilhamento de tela (mic nunca tem video);
+    // isso evita que o audio do compartilhamento de tela seja confundido com o audio do microfone,
+    // já que ambos chegam como faixas "audio" separadas.
+    const kind = stream.getVideoTracks().length > 0 ? "video" : "audio";
+    cb.onRemoteTrack(peerId, kind, stream);
   };
 
   pc.onconnectionstatechange = () => {
@@ -86,8 +93,10 @@ export function createPeer(peerId: string, isInitiator: boolean): void {
     if (track) entry.micSender = pc.addTrack(track, localMicStream);
   }
   if (localScreenStream) {
-    const track = localScreenStream.getVideoTracks()[0];
-    if (track) entry.screenSender = pc.addTrack(track, localScreenStream);
+    const videoTrack = localScreenStream.getVideoTracks()[0];
+    if (videoTrack) entry.screenSender = pc.addTrack(videoTrack, localScreenStream);
+    const audioTrack = localScreenStream.getAudioTracks()[0];
+    if (audioTrack) entry.screenAudioSender = pc.addTrack(audioTrack, localScreenStream);
   }
 }
 
@@ -129,10 +138,11 @@ export async function handleSignal(from: string, kind: SignalKind, data: unknown
 
 export function addScreenTrackToAllPeers(stream: MediaStream): void {
   localScreenStream = stream;
-  const track = stream.getVideoTracks()[0];
-  if (!track) return;
+  const videoTrack = stream.getVideoTracks()[0];
+  const audioTrack = stream.getAudioTracks()[0];
   peers.forEach((entry) => {
-    entry.screenSender = entry.pc.addTrack(track, stream);
+    if (videoTrack) entry.screenSender = entry.pc.addTrack(videoTrack, stream);
+    if (audioTrack) entry.screenAudioSender = entry.pc.addTrack(audioTrack, stream);
   });
 }
 
@@ -141,6 +151,10 @@ export function removeScreenTrackFromAllPeers(): void {
     if (entry.screenSender) {
       entry.pc.removeTrack(entry.screenSender);
       entry.screenSender = null;
+    }
+    if (entry.screenAudioSender) {
+      entry.pc.removeTrack(entry.screenAudioSender);
+      entry.screenAudioSender = null;
     }
   });
   localScreenStream = null;

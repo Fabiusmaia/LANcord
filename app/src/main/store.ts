@@ -17,9 +17,7 @@ export function registerStoreHandlers(): void {
   });
 
   ipcMain.handle(IPC.ADD_RECENT_CONNECTION, (_event, connection: RecentConnection) => {
-    const existing = store.get("recentConnections").filter(
-      (c) => !(c.host === connection.host && c.port === connection.port)
-    );
+    const existing = store.get("recentConnections").filter((c) => c.address !== connection.address);
     const updated = [connection, ...existing].slice(0, 8);
     store.set("recentConnections", updated);
     return updated;
