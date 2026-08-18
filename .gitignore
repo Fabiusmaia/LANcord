@@ -1,0 +1,9 @@
+node_modules/
+out/
+dist/
+release/
+*.tsbuildinfo
+.env
+app/electron.vite.config.js
+app/electron.vite.config.d.ts
+discord lanm.txt
