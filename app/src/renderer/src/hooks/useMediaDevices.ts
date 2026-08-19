@@ -21,8 +21,16 @@ export async function startScreenShare(sourceId: string): Promise<void> {
   await window.electronAPI.setSelectedSource(sourceId);
   // Audio nao vem do getDisplayMedia (que so oferece loopback do sistema
   // inteiro); vem do appAudioTrack, que isola o audio do app/janela escolhida.
-  const displayStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+  const displayStream = await navigator.mediaDevices.getDisplayMedia({
+    video: {
+      width: { ideal: 1920, max: 1920 },
+      height: { ideal: 1080, max: 1080 },
+      frameRate: { ideal: 60, max: 60 },
+    },
+    audio: false,
+  });
   const [videoTrack] = displayStream.getVideoTracks();
+  videoTrack.contentHint = "motion";
   videoTrack.onended = () => stopScreenShare();
 
   const audioTrack = await startAppAudioTrack(sourceId);

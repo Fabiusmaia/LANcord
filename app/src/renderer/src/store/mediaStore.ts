@@ -11,6 +11,9 @@ type MediaState = {
   remoteAudioStreams: Record<string, MediaStream>;
   /** Stream de vídeo (screen share) por peer. */
   remoteScreenStreams: Record<string, MediaStream>;
+  /** Mutes que só valem pro lado de quem mutou — nunca broadcast pro servidor. */
+  locallyMutedMics: Record<string, boolean>;
+  locallyMutedScreenAudio: Record<string, boolean>;
 };
 
 type MediaActions = {
@@ -22,6 +25,8 @@ type MediaActions = {
   setRemoteAudioStream: (peerId: string, stream: MediaStream) => void;
   setRemoteScreenStream: (peerId: string, stream: MediaStream) => void;
   removeRemotePeerStreams: (peerId: string) => void;
+  toggleLocalMicMute: (peerId: string) => void;
+  toggleLocalScreenAudioMute: (peerId: string) => void;
   reset: () => void;
 };
 
@@ -33,6 +38,8 @@ const initialState: MediaState = {
   screenStream: null,
   remoteAudioStreams: {},
   remoteScreenStreams: {},
+  locallyMutedMics: {},
+  locallyMutedScreenAudio: {},
 };
 
 export const useMediaStore = create<MediaState & MediaActions>((set) => ({
@@ -50,9 +57,24 @@ export const useMediaStore = create<MediaState & MediaActions>((set) => ({
     set((s) => {
       const nextAudio = { ...s.remoteAudioStreams };
       const nextScreen = { ...s.remoteScreenStreams };
+      const nextMutedMics = { ...s.locallyMutedMics };
+      const nextMutedScreens = { ...s.locallyMutedScreenAudio };
       delete nextAudio[peerId];
       delete nextScreen[peerId];
-      return { remoteAudioStreams: nextAudio, remoteScreenStreams: nextScreen };
+      delete nextMutedMics[peerId];
+      delete nextMutedScreens[peerId];
+      return {
+        remoteAudioStreams: nextAudio,
+        remoteScreenStreams: nextScreen,
+        locallyMutedMics: nextMutedMics,
+        locallyMutedScreenAudio: nextMutedScreens,
+      };
     }),
+  toggleLocalMicMute: (peerId) =>
+    set((s) => ({ locallyMutedMics: { ...s.locallyMutedMics, [peerId]: !s.locallyMutedMics[peerId] } })),
+  toggleLocalScreenAudioMute: (peerId) =>
+    set((s) => ({
+      locallyMutedScreenAudio: { ...s.locallyMutedScreenAudio, [peerId]: !s.locallyMutedScreenAudio[peerId] },
+    })),
   reset: () => set(initialState),
 }));

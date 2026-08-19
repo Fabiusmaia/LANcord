@@ -2,27 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { useChatStore } from "@renderer/store/chatStore";
 import { useConnectionStore } from "@renderer/store/connectionStore";
 import { sendChat } from "@renderer/hooks/useSocket";
+import { fileToCompressedDataUrl } from "@renderer/utils/imageCompression";
 
 const MAX_IMAGE_DIMENSION = 1600;
 const IMAGE_JPEG_QUALITY = 0.82;
-
-/** Reduz a imagem pra caber no limite de payload do socket.io (server aceita ate ~7MB
- *  de data URL) e pra nao pesar demais numa conexao via tunel. */
-async function fileToCompressedDataUrl(file: File): Promise<string> {
-  const bitmap = await createImageBitmap(file);
-  const scale = Math.min(1, MAX_IMAGE_DIMENSION / Math.max(bitmap.width, bitmap.height));
-  const width = Math.round(bitmap.width * scale);
-  const height = Math.round(bitmap.height * scale);
-
-  const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("Canvas 2D não suportado");
-  ctx.drawImage(bitmap, 0, 0, width, height);
-
-  return canvas.toDataURL("image/jpeg", IMAGE_JPEG_QUALITY);
-}
 
 export default function ChatPanel(): JSX.Element {
   const messages = useChatStore((s) => s.messages);
@@ -41,7 +24,7 @@ export default function ChatPanel(): JSX.Element {
     if (!file || !file.type.startsWith("image/")) return;
     setSendingImage(true);
     try {
-      setPendingImage(await fileToCompressedDataUrl(file));
+      setPendingImage(await fileToCompressedDataUrl(file, MAX_IMAGE_DIMENSION, IMAGE_JPEG_QUALITY));
     } catch (err) {
       console.error("[chat] falha ao processar imagem", err);
     } finally {

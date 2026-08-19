@@ -6,6 +6,13 @@ export type Member = {
   joinedAt: number;
 };
 
+export type Room = {
+  id: string;
+  name: string;
+  hasPassword: boolean;
+  memberCount: number;
+};
+
 export type ChatMessage = {
   id: string;
   username: string;
@@ -39,15 +46,28 @@ export type MemberStatusPayload = {
   sharing?: boolean;
 };
 
+export type IceServer = {
+  urls: string | string[];
+  username?: string;
+  credential?: string;
+};
+
 export interface ClientToServerEvents {
   join: (payload: { username: string }) => void;
+  "room:list": () => void;
+  "room:create": (payload: { name: string; password?: string }) => void;
+  "room:join": (payload: { roomId: string; password?: string }) => void;
+  "room:leave": () => void;
+  "ice-servers:get": (callback: (iceServers: IceServer[]) => void) => void;
   signal: (payload: SignalPayload) => void;
   "status:update": (payload: StatusUpdatePayload) => void;
   "chat:send": (payload: { text: string; image?: string }) => void;
 }
 
 export interface ServerToClientEvents {
-  welcome: (payload: { self: Member; members: Member[] }) => void;
+  "rooms:list": (payload: { rooms: Room[] }) => void;
+  "room:joined": (payload: { room: Room; self: Member; members: Member[] }) => void;
+  "room:error": (payload: { message: string }) => void;
   "member:joined": (payload: { member: Member }) => void;
   "member:left": (payload: { id: string }) => void;
   "member:status": (payload: MemberStatusPayload) => void;

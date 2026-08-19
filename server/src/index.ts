@@ -1,7 +1,7 @@
 import { createServer } from "node:http";
 import { Server } from "socket.io";
 import { registerHandlers } from "./handlers.js";
-import { getIceServers } from "./turnCredentials.js";
+import { ensureDefaultRoom } from "./state.js";
 import type { ClientToServerEvents, ServerToClientEvents } from "./types.js";
 
 try {
@@ -18,13 +18,11 @@ const httpServer = createServer((req, res) => {
     res.end("LANcord signaling server no ar.");
     return;
   }
-  if (req.url === "/ice-servers") {
-    getIceServers().then((iceServers) => {
-      res.writeHead(200, { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" });
-      res.end(JSON.stringify({ iceServers }));
-    });
-  }
+  res.writeHead(404);
+  res.end();
 });
+
+ensureDefaultRoom();
 const io = new Server<ClientToServerEvents, ServerToClientEvents>(httpServer, {
   cors: { origin: "*" },
   maxHttpBufferSize: 8_000_000,
